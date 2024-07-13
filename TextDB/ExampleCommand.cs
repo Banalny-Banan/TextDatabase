@@ -19,6 +19,7 @@ public class ExampleCommand : ICommand, IUsageProvider
         if (arguments.Count < 2)
         {
             response = "This command requires at least 2 arguments";
+            return false;
         }
 
         switch (arguments.At(0).ToLower())

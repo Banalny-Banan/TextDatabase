@@ -15,12 +15,12 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
     string RootDirectory { get; } = $"{Paths.Plugins}/TextDB/";
 
     static readonly Dictionary<string, TextDatabase> Databases = [];
-    
+
     public static float SynchronizationInterval { get; set; } = 15f;
 
     public static TextDatabase Open(string name)
         => Databases.GetValueOrDefault(name) ?? (Databases[name] = new TextDatabase(name));
-    
+
     TextDatabase(string name)
     {
         char[] forbiddenChars = name.Intersect(Path.GetInvalidFileNameChars()).ToArray();
@@ -46,7 +46,7 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
     }
 
     readonly CoroutineHandle _updateCoroutine;
-    public const char KeySeparator = 'ꨘ';
+    public const char KeySeparator = 'Ǽ';
     readonly string _name;
     readonly string _path;
     readonly Dictionary<string, string> _dictionary;
@@ -57,9 +57,9 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
     public int Count => _dictionary.Count;
     public IEnumerable<string> Keys => _dictionary.Keys;
     public IEnumerable<string> Values => _dictionary.Values;
-    
+
     public bool ContainsKey(string key) => _dictionary.ContainsKey(key);
-    
+
     public bool TryGetValue(string key, out string value) => _dictionary.TryGetValue(key, out value);
 
     //Write
@@ -83,11 +83,11 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
     }
 
     public void Remove(string key) => Edit(d => d.Remove(key));
-    
+
     public void Clear() => Edit(d => d.Clear());
-    
+
     //Internal
-    
+
     void Edit(Action<Dictionary<string, string>> edit)
     {
         edit(_dictionary);
@@ -99,7 +99,7 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
         if (item.Contains(KeySeparator))
             throw new ArgumentException($"The {paramName} cannot contain the key separator character ''");
     }
-        
+
     IEnumerator<float> UpdateCoroutine()
     {
         while (true)
@@ -111,7 +111,6 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
             catch (IOException)
             {
                 Log.Debug($"TextDB \"{_name}\" synchronization: File already in use, retrying in {SynchronizationInterval + Random.Range(3f, 6f):F2} seconds.");
-                
             }
             catch (Exception e)
             {
@@ -124,42 +123,43 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
 
     void Sync()
     {
-        string text = File.ReadAllText(_path);
-        string[] items = text.Split(KeySeparator);
-
-        if (items.Length % 2 != 0)
-            throw new InvalidOperationException("Text database is corrupted - odd number of items.");
-
-        _dictionary.Clear();
-        for (var i = 0; i < items.Length; i += 2)
+        if (File.ReadAllText(_path) is { Length: > 0 } text)
         {
-            string key = items[i];
-            string value = items[i + 1];
-            _dictionary.Add(key, value);
-        }
+            string[] items = text.Split(KeySeparator);
 
-        if (_edits.Count == 0)
-            return;
+            if (items.Length % 2 != 0)
+                throw new InvalidOperationException("Text database is corrupted - odd number of items.");
 
-        while (_edits.TryDequeue(out Action<Dictionary<string, string>> edit))
-        {
-            try
+            _dictionary.Clear();
+            for (var i = 0; i < items.Length; i += 2)
             {
-                edit(_dictionary);
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Error while applying TextDB edit: {e}");
-                throw;
+                string key = items[i];
+                string value = items[i + 1];
+                _dictionary.Add(key, value);
             }
         }
-        
-        text = string.Join(KeySeparator, _dictionary.Select(pair => pair.Key + KeySeparator + pair.Value));
-        File.WriteAllText(_path, text);
+
+        if (_edits.Count != 0)
+        {
+            while (_edits.TryDequeue(out Action<Dictionary<string, string>> edit))
+            {
+                try
+                {
+                    edit(_dictionary);
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Error while applying TextDB edit: {e}");
+                }
+            }
+
+            text = string.Join(KeySeparator, _dictionary.Select(pair => pair.Key + KeySeparator + pair.Value));
+            File.WriteAllText(_path, text);
+        }
     }
-    
+
     // Interfaces
-    
+
     public IEnumerator<KeyValuePair<string, string>> GetEnumerator() => throw new NotImplementedException();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
