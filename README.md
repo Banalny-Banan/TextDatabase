@@ -1,4 +1,8 @@
 Simple string:string database that you can use as a C# dictionary. 
-It's not a great choice for large amounts of data, but good enough for storing simple variables such as players' total time spent on your server.
-Add the `.dll` to your dependencies, and create a database using `TextDatabase.Open("your_database_name")`. It will contain everything from previous times you've used it, and automatically sync with the text file, allowing multiple servers to use it at the same time.
-Be careful not to edit the character you chose as the key separator, as doing this will cause an exception.
+Not a great choice for large amounts of data, but good enough for storing simple variables such as players' total time spent on your server.
+
+## How to use
+1. Add `TextDb.dll` from [releases page](https://github.com/Banalny-Banan/TextDatabase/releases) to your dependencies.
+2. Create a new database using `TextDatabase.Open("your_database_name")`. You can interact with it as you would with a normal dictionary.
+
+Dont try to save `ꨘ`, it is used as key/value separator.
