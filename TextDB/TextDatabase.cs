@@ -4,28 +4,31 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Exiled.API.Features;
 using MEC;
+using Random = UnityEngine.Random;
 
-namespace TextDatabase;
+namespace TextDB;
 
 public class TextDatabase : IReadOnlyDictionary<string, string>
 {
-    string RootDirectory { get; } = $"{Paths.Plugins}/TextDatabase/";
+    string RootDirectory { get; } = $"{Paths.Plugins}/TextDB/";
 
     static readonly Dictionary<string, TextDatabase> Databases = [];
+    
+    public static float SynchronizationInterval { get; set; } = 15f;
 
-    public static TextDatabase Open(string name, string keySeparator = "\n")
-        => Databases.GetValueOrDefault(name) ?? (Databases[name] = new TextDatabase(name, keySeparator));
-
-    TextDatabase(string name, string keySeparator = "\n")
+    public static TextDatabase Open(string name)
+        => Databases.GetValueOrDefault(name) ?? (Databases[name] = new TextDatabase(name));
+    
+    TextDatabase(string name)
     {
         char[] forbiddenChars = name.Intersect(Path.GetInvalidFileNameChars()).ToArray();
         if (forbiddenChars.Length > 0)
             throw new ArgumentException("Name cannot contain the following characters: " + string.Join(", ", forbiddenChars));
 
         _name = name;
-        _keySeparator = keySeparator;
         _path = Path.Combine(RootDirectory, _name + ".txt");
 
         Directory.CreateDirectory(RootDirectory);
@@ -40,11 +43,11 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
     ~TextDatabase()
     {
         Timing.KillCoroutines(_updateCoroutine);
-        Flush();
+        Sync();
     }
 
     readonly CoroutineHandle _updateCoroutine;
-    readonly string _keySeparator;
+    public const char KeySeparator = 'ꨘ';
     readonly string _name;
     readonly string _path;
     readonly Dictionary<string, string> _dictionary;
@@ -92,10 +95,10 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
         _edits.Enqueue(edit);
     }
 
-    void Validate(string item, string paramName)
+    static void Validate(string item, string paramName)
     {
-        if (item.Contains(_keySeparator))
-            throw new ArgumentException($"The {paramName} cannot contain the key separator character.");
+        if (item.Contains(KeySeparator))
+            throw new ArgumentException($"The {paramName} cannot contain the key separator character ''");
     }
         
     IEnumerator<float> UpdateCoroutine()
@@ -104,30 +107,31 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
         {
             try
             {
-                Flush();
+                Sync();
             }
             catch (IOException)
             {
-                Log.Debug($"TextDatabase \"{_name}\" flush: File already in use, retrying in 15 seconds.");
+                Log.Debug($"TextDB \"{_name}\" synchronization: File already in use, retrying in {SynchronizationInterval + Random.Range(3f, 6f):F2} seconds.");
+                
             }
             catch (Exception e)
             {
-                Log.Error($"Unexpected error in TextDatabase \"{_name}\" flush: {e}");
+                Log.Error($"Unexpected error in TextDB \"{_name}\" synchronization: {e}");
             }
 
-            yield return Timing.WaitForSeconds(15f);
+            yield return Timing.WaitForSeconds(SynchronizationInterval);
         }
     }
 
-    void Flush()
+    void Sync()
     {
         string text = File.ReadAllText(_path);
-        string[] items = text.Split(_keySeparator);
-        _dictionary.Clear();
+        string[] items = text.Split(KeySeparator);
 
         if (items.Length % 2 != 0)
             throw new InvalidOperationException("Text database is corrupted - odd number of items.");
 
+        _dictionary.Clear();
         for (var i = 0; i < items.Length; i += 2)
         {
             string key = items[i];
@@ -146,12 +150,12 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
             }
             catch (Exception e)
             {
-                Log.Error($"Error while applying TextDatabase edit: {e}");
+                Log.Error($"Error while applying TextDB edit: {e}");
                 throw;
             }
         }
-
-        text = string.Join(_keySeparator, _dictionary.Select(pair => pair.Key + _keySeparator + pair.Value));
+        
+        text = string.Join(KeySeparator, _dictionary.Select(pair => pair.Key + KeySeparator + pair.Value));
         File.WriteAllText(_path, text);
     }
     
