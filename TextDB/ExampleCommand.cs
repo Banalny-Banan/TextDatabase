@@ -3,7 +3,7 @@ using CommandSystem;
 
 namespace TextDB;
 
-[CommandHandler(typeof(GameConsoleCommandHandler))] //Uncomment this line if you want to use this command in the game
+[CommandHandler(typeof(GameConsoleCommandHandler))]
 public class ExampleCommand : ICommand, IUsageProvider
 {
     public string Command => "TextDatabaseTest";
