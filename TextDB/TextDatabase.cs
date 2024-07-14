@@ -110,7 +110,9 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
             }
             catch (IOException)
             {
-                Log.Debug($"TextDB \"{_name}\" synchronization: File already in use, retrying in {SynchronizationInterval + Random.Range(3f, 6f):F2} seconds.");
+                var randomInterval = Random.Range(3f, 6f);
+                Log.Debug($"TextDB \"{_name}\" synchronization: File already in use, retrying in {SynchronizationInterval + randomInterval:F2} seconds.");
+                yield return Timing.WaitForSeconds(randomInterval);
             }
             catch (Exception e)
             {
