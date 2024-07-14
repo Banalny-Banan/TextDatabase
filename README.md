@@ -1,5 +1,4 @@
-Simple `[string:string]` text file database that you can use as a C# dictionary. 
-Not a great choice for large amounts of data, but good enough for storing simple variables such as players' total time spent on your server.
+Simple `[string:string]` text file database that you can use as a C# dictionary. Requires no additional dependencies.
 
 ## How to use
 1. Add `TextDB.dll` from [releases page](https://github.com/Banalny-Banan/TextDatabase/releases) to your dependencies.
