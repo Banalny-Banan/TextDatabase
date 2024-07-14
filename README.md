@@ -1,4 +1,4 @@
-Simple string:string database that you can use as a C# dictionary. 
+Simple `[string:string]` text file database that you can use as a C# dictionary. 
 Not a great choice for large amounts of data, but good enough for storing simple variables such as players' total time spent on your server.
 
 ## How to use
