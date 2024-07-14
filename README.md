@@ -1,4 +1,4 @@
-Simple `[string:string]` text file database that you can use as a C# dictionary. Requires no additional dependencies.
+Simple `[string:string]` text file database that you can use as a C# dictionary. Requires no additional dependencies. Can synchronize edits on multiple servers.
 
 ## How to use
 1. Add `TextDB.dll` from [releases page](https://github.com/Banalny-Banan/TextDatabase/releases) to your dependencies.
