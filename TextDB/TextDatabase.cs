@@ -97,7 +97,7 @@ public class TextDatabase : IReadOnlyDictionary<string, string>
     static void Validate(string item, string paramName)
     {
         if (item.Contains(KeySeparator))
-            throw new ArgumentException($"The {paramName} cannot contain the key separator character ''");
+            throw new ArgumentException($"The {paramName} cannot contain the key separator character '{KeySeparator}'.");
     }
 
     IEnumerator<float> UpdateCoroutine()

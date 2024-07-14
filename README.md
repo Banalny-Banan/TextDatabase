@@ -9,8 +9,8 @@ Also don't try to save `Ǽ`, it is used as key/value separator.
 ## Q&A:
  **Q:** Can I use the same database on multiple servers?
 
-- **A:** Yes, but make sure to not make any edits that cause conflicts between servers, as they **wont** throw exceptions when made.
+- **A:** Yes, but make sure to not make any edits that cause conflicts between servers, as they **won't** throw exceptions when made.
 
 **Q:** How to store numbers/dates/etc.?
 
-* **A:** Convert them to strings! All default C# types have `.ToString()` and `.Parse()` that can turn them into and from strings.
+- **A:** Convert them to strings! All default C# types have `.ToString()` and `.Parse()` that can turn them into and from strings.
